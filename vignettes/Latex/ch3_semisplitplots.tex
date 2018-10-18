@@ -1,0 +1,96 @@
+\section{Less Restrictive Randomization}\label{semisplitplots}
+
+Split-plot designs using HTC- and ETC-factors are not always flexible enough to represent all real world problems. The following example comes from an assay development. A crucial part of many assays is the sample preparation. Sample preperation cleans the sample (blood serum, plasma or urine for example) from undesired components like fats or proteins. Getting rid of those parts of the sample helps in terms of reproducibility of measurements and lowers the limit of quantification. For optimizing the sample preparation workflows laboratories often use robots. These robots allow to test a lot of different workflows in a reasonable time. This way it is possible to test hundreds of different workflows over night. 
+
+Typical DoEs for finding a optimal sample preparation workflow might include factors like \textbf{pH}-values, \textbf{incubation times}, \textbf{incubation temperatures}, usage of different \textbf{types of solutions}, etc. The authors where facing a problem with the different \textbf{types of solutions} in a workflow optimization DoE. As part of the optimization 6 different types of solvents shall be testet. These solvents are stored in bottles and need to be placed on the robot. The robot will automatically pick the right solution for any given experiment. But only 4 different bottles can be stored on the robot due to space limitations.
+
+It is possible to work with 4 different solutions and have a completely randomized design - even though one might argue that using always the same bottles of solutions is a violation of the assumption of independence. The latter is ignored for the moment as we can very well assume that the product quality of the solutions is very stable. The robot can work with four solutions completely independently. When a fifth solution is used in the DoE, it becomes more complicated. Now the robot has to be stopped and the operator will exchange one or more bottles before the robot is able to continue it's work. 
+
+This is very inconvenient because it makes it impossible to perform experiments over night without having an operator supervising the robot at all time. A completley randomized DOE might lead to a workflow like in table \ref{ch3_crd}.
+
+\begin{table}[!h]
+\centering
+\begin{tabular}{cc|cc}
+  \hline
+Run & Solution & Run & Solution\\ 
+  \hline
+  \hline
+ 1 & A & 10 & D\\ 
+ 2 & B & 11 & E\\ 
+ 3 & A & 12 & A\\ 
+ 4 & C & 13 & B\\ 
+ 5 & D & \multicolumn{2}{c}{Change Bottles}\\ 
+ \multicolumn{2}{c|}{Change Bottles} & 14 & C\\ 
+ 6 & E & 15 & D\\ 
+ 7 & A & 16 & D\\ 
+ 8 & B & 17 & C\\ 
+ 9 & C & 18 & A\\ 
+ \multicolumn{2}{c|}{Change Bottles} & $\dots$ &$\dots$\\ 
+   \hline
+\end{tabular}
+ \caption{Completely Randomized Design}
+ \label{ch3_crd}
+\end{table}
+
+Especially for larger DOEs using a completly randomized design would be very inconvenient. It removes most of the benefits that come from automated experimentation as a lot of user interaction with the robot is required. Treating the factor \textbf{type of solution} as a HTC-factor is an alternative (see table \ref{ch3_spd}).
+
+\begin{table}[!h]
+	\centering{
+	\begin{tabular}{cc | cc}
+		\hline
+		Whole Plot & Solution & Whole Plot & Solution\\
+		\hline
+		\hline
+		1 & A & 3 & D\\
+		1 & A & 3 & D\\
+		1 & A & 3 & D\\
+		1 & A & 3 & D\\
+		\multicolumn{2}{c|}{ Change Bottles} & \multicolumn{2}{c}{ Change Bottles}\\
+		2 & C & 4 & B\\
+		2 & C & 4 & B\\
+		2 & C & 4 & B\\
+		2 & C & 4 & B\\
+		\multicolumn{2}{c|}{ Change Bottles} & $\dots$ & $\dots$\\		
+		\hline
+	\end{tabular}
+	}
+	\caption{Split Plot Design}
+	\label{ch3_spd}
+\end{table}
+	
+
+Following this approach we can reduce the work for the operator but there are two problems:
+
+\begin{enumerate}
+\item \textbf{Randomization:} Split-plot designs are always a nod to practicality but all split-plot designs restrict the randomization of the DoE. This makes split-plots vulnerable to effects due to non-controlled factors. For the given use case it would be possible to do better in terms of randomization compared to a split-plot design.
+\item \textbf{Correlation structure:} One advantage of split-plot-designs is that a correlation between experiments inside of one whole plot is accepted. For the given use case this structure does not really fit the problem. Rather than stopping the robot after each whole plot it would be much more desireable to stop the robot after the fourth whole plot is finished. Thus the correlation structure is different than it would be assumed by the split-plot-design-setup.
+\end{enumerate}
+
+A better structured design for the given problem would look like this:	
+
+\begin{table}[!h]
+	\centering{
+	\begin{tabular}{cc | cc}
+		\hline
+		Whole Plot & Solution & Whole Plot & Solution\\
+		\hline
+		\hline
+		1 & A & 3 & A\\
+		1 & B & 3 & B\\
+		1 & C & 3 & C\\
+		1 & D & 3 & E\\
+		\multicolumn{2}{c|}{ Change Bottles} & \multicolumn{2}{c}{ Change Bottles}\\
+		2 & E & 4 & F\\
+		2 & F & 4 & E\\
+		2 & A & 4 & C\\
+		2 & B & 4 & A\\
+		\multicolumn{2}{c|}{ Change Bottles} & $\dots$ & $\dots$\\		
+		\hline
+	\end{tabular}
+	}
+	\caption{Semi Split Plot Design}
+\end{table}
+
+All runs are grouped similarly like in a split-plot-design. The restriction to randomization is different though. In a split-plot-design there is at least one hard-to-change-factor that is hold constant in each whole plot. Now there is one factor - we will call it \textbf{semi-hard-to-change} (SHTC) - that is not fixed to one level inside of each whole plot. Instead the factor levels can change from one run to the next. But rather than using any of the possible factor levels, the randomization only allows to use four out of the six possible factor levels in each group.
+
+It would not be wrong to think about this setup as a design using random blocks. Each random block contains experiments that can be performed without operator interaction. But here we introduce an additional restriction that ensures that only a given number of different settings of the SHTC-factor are used inside of each block.

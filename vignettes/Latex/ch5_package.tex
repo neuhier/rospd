@@ -1,0 +1,125 @@
+\section{Using the rospd-Package} \label{rospd}
+
+The rospd-package (\textbf{R O}ptimal \textbf{S}plit \textbf{P}lot \textbf{D}esigns) is an implementation of the previously described algorithm. This chapter shows how to use the package function to create optimal semi-split-plot designs. The core part of the package are the two classes \textit{doeFactor} and \textit{doeDesign}. The \textit{doeDesign} class collects all information required to generate an optimal design. This includes a list of \textit{doeFactors} that should be investigated in the DoE. 
+
+\subsection{The doeFactor class}
+
+Objects of class \textit{doeFactor} represent factors in the DoE. \textit{doeFactor} is a S4 class with the following slots:
+
+\begin{itemize}
+\item \textbf{name:} The name of the factor as a character.
+\item \textbf{type:} Either \textit{"continuous"} or \textit{"categorical"}. Continuous factors are numeric factors that could theoretically take any real number in a given range. Categorical factors use either character or numeric values. They are interpreted as nominal variables.
+\item \textbf{levels:} For continuous factors the user specifies the range of the factor as a numeric vector containing minimum and maximum. For categorical factors a vector with all possible factor levels - either numeric or characters - is required.
+\item \textbf{number.levels:} The number of levels is only required for continuous factors. This integer represents how many different levels are used during the design generation. E.g. for $number.levels = 3$ and $levels=c(100, 300)$ the factor levels that are used during the design updating are 100, 200 and 300. For $number.levels = 5$ and $levels=c(100, 300)$ the possible factor levels are 100, 150, 200, 250 and 300. The number of levels have a strong impact on the runtime of the algorithm.
+\item \textbf{changes:} This defines if a factor is \textit{"easy"}-, \textit{"hard"}- or \textit{"semi.hard"}-to-change.
+\item \textbf{semi.htc.group.size:} This is only required for SHTC-factors. This integer defines how many different factor levels can be used inside of one whole plot.
+\end{itemize}
+
+The factors of the current example can be declared the following way:
+
+\begin{verbatim}
+# pH - an ETC continuous factor
+phFactor <- new("doeFactor",
+                name="pH",
+                type="continuous",
+                levels = c(3,12),
+                number.levels = as.integer(2),
+                changes="easy"
+                )
+
+# time - an ETC continuous factor
+timeFactor <- new("doeFactor",
+                name="time",
+                type="continuous",
+                levels = c(10,20),
+                number.levels = as.integer(2),
+                changes="easy"
+                )
+
+# solvent - a SHTC categorical factor
+solventFactor <- new("doeFactor",
+                     name="solvent",
+                     type="categorical",
+                     levels=c("A", "B", "C",
+                     		  "D", "E", "F"),
+                     changes="semi.hard",
+                     semi.htc.group.size=
+                      as.integer(4)
+                     )
+\end{verbatim}
+
+\subsection{ The doeDesign class}
+
+The \textit{doeDesign}-class is the heart of rospd. It stores all information required to generate an optimal design and will contain the final design table afterwards as well. This way any \textit{doeDesign}-object can serve as a documentation of how the design was created. \textit{doeDesign} is a S4-class. As it uses a lot of different slots only the required ones will be discussed here.
+
+\begin{itemize}
+\item \textbf{factors:} A list of all factors that are used in the DoE as objects of class \textit{doeFactor}. This list can contain one or more items.
+\item \textbf{whole.plot.structure:} The whole plot structure is a data.frame representing when changes can be made for all HTC- and SHTC-factor. This data.frame needs to contain one column for each HTC- and SHTC-factor using the factor names as column names. The whole plots of each factor are represented by index numbers starting at 1 for each factor.
+\item \textbf{number.runs:} The number of experiments as \textit{integer}.
+\item \textbf{design.model:} The design model as a \textit{formula}. The formula is supposed to contain only the fixed effects part of the model as the random effects part is already defined by the \textbf{whole.plot.structure}.
+\item \textbf{optimality.function:} a \textit{function} that can be used to calculate the optimality of a given design. The algorithm will use the \textit{doeDesign}-object as the only argument of the function. Making use of the slots \textbf{design.matrix}, \textbf{design.model} and \textbf{variance.ratio} of the class \textbf{doeDesign} should allow to calculate most optimality criteria. The rospd package provides a predefined function to calculate D-Optimality. The function is a wrapper of the C-implementation of the skpr-package \cite{skprpkg}.
+\item \textbf{variance.ratio:} The expected ratio of $\sigma^2$ (residual variance) and $\sigma^2_w$ (between whole plot variance). This is required for the calculation of some optimality criteria. By default a variance ratio of 1 is used.
+\end{itemize}
+
+There is a function \textbf{GenerateNewDoEDesign} that should be used to initialize a new \textit{doeDesign}-object. A \textit{doeDesign}-object for the current example might look like this:
+
+\begin{verbatim}
+  doeSpecification <- GenerateNewDoeDesign(
+      factors = list(
+      				solventFactor, 
+      				phFactor, 
+      				timeFactor),
+      whole.plot.structure = 
+      		data.frame(solvent=
+      			rep(1:6, each=10)),
+      number.runs = as.integer(60),
+      design.model = ~solvent+pH+time,
+      optimality.function = DOptimality
+  )
+\end{verbatim}
+
+\subsection{Generating Optimal Designs}
+
+The function \textbf{GenerateOptimalDesign} generates an optimal design for the given specification. The function uses the following arguments:
+
+\begin{itemize}
+\item \textbf{doeSpec:} The doe specification as an object of class \textit{doeDesign}.
+\item \textbf{random.start:} This argument controls how many different random starting designs are used. The default setting is 1. The function will return a list of one doeDesign for each random start. The designs in this list will be sorted from best to worst in terms of their optimality.
+\item \textbf{max.iter:} The maximum number of iterations. One iterations updates all cells of the design table once. 
+\end{itemize}
+
+The following code generate a D-optimal semi split-plot design.
+
+\begin{verbatim}
+  optimalDesign <- 
+    GenerateOptimalDesign(doeSpecification)
+\end{verbatim}
+
+Table \ref{dosspd} shows a subset of the generated design.
+
+\begin{table*}[!h]
+\centering
+\begin{tabular}{rlrr|rlrr}
+  \hline
+Whole Plot & Solvent & pH & Time & Whole Plot & Solvent & pH & Time \\ 
+  \hline
+  \hline
+1 & B & 12 & 20 &   5 & D & 12 & 20 \\ 
+1 & B & 3 & 10 &   5 & D & 3 & 10 \\ 
+1 & F & 3 & 20 &   5 & E & 3 & 10 \\ 
+ 1 & C & 12 & 10 &   5 & E & 12 & 10 \\ 
+ 1 & C & 3 & 20 &   5 & E & 12 & 20 \\ 
+ 1 & C & 12 & 20 &   6 & A & 12 & 20 \\ 
+ 1 & D & 3 & 10 &   6 & A & 3 & 10 \\ 
+ 1 & F & 12 & 10 &   6 & A & 3 & 20 \\ 
+ 1 & D & 12 & 10 &   6 & B & 3 & 20 \\ 
+ 1 & F & 3 & 20 &   6 & B & 3 & 10 \\ 
+ 2 & E & 12 & 20 &   6 & B & 12 & 10 \\ 
+ 2 & A & 12 & 20 &   6 & F & 12 & 20 \\ 
+ 2 & A & 12 & 10 &   6 & E & 3 & 20 \\ 
+ 2 & E & 3 & 20 &   6 & E & 12 & 10 \\ 
+ 2 & B & 3 & 20 &   6 & F & 12 & 10 \\ 
+   \hline
+\end{tabular}
+\caption{Part of the Semi Split Plot Design} \label{dosspd}
+\end{table*}

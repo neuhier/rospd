@@ -1,0 +1,12 @@
+base
+Rcpp
+RcppEigen
+ggplot2
+SparseM
+quantreg
+vdg
+reshape
+rospd
+knitr
+magrittr
+ggpubr

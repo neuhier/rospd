@@ -1,0 +1,123 @@
+\section{Restricted Randomization in Split-Plot-Designs}\label{splitplots}
+
+When applying design of experiments (DoE) in the real world it is often difficult to follow one of the core concepts of DoE: Randomization. In a completely randomized design (\textbf{CRD}), treatments (combinations of factor levels) are performed in complete random order to avoid bias in the analysis due to uncontrolled factors. In many applications following this idea is a problem. Often there are restrictions to the experimental setup that make a complete randomized design extremely expensive or inconvenient at best. 
+
+Kowalski \cite{kowalski:recsplitplot} discusses a example for this problem. When trying to optimize the quality of a printing process there are three factors to look at:
+
+\begin{itemize}
+\item \textbf{Blanket Type:} Two possibles types of blankets for the printing press.
+\item \textbf{Cylinder Gap:} The distance between the two cylinders of the printing press.
+\item \textbf{Press Speed:} The speed of the printing press.
+\end{itemize}
+
+\begin{figure}[h!]
+	\centering{
+	\includegraphics[scale=0.5]{ch2_printingPress.png}
+	\caption{Printing Press Example}
+	\label{ch2:printingpress}
+	}
+\end{figure}
+
+It is fairly simple to change the \textbf{Cyliner Gap} or \textbf{Press Speed} from one experiment to the next one, as these factors can be reset during the printing process. Exchanging the \textbf{Blanket Type} though is much more work. It requires the printing press to be stopped before the old blanket can be removed and the new one can be put on the press. Thus a completely randomized design, like the following one, is very time intensive as it involves exchanging the blanket quite often.
+
+
+\begin{table}[h!]
+\centering
+\begin{tabular}{llll}
+  \hline
+Blanket Type & Cylinder Gap & Press Speed \\ 
+  \hline
+2 & low & high \\ 
+2 & high & low \\ 
+2 & low & low \\ 
+1 & low & high \\ 
+2 & low & low \\ 
+1 & high & low \\ 
+1 & low & low \\ 
+2 & high & high \\ 
+   \hline
+\end{tabular}
+	\caption{Printing Press Example as CRD}
+\end{table}
+
+
+The reader should be aware that the operator is expected to exchange the blanket after each run even if consecutive runs are using the same type of blanket. The rationale behind that is, that ordinary least squares regression - that is typically used to analyze DoE-data - assumes independence of observations. Using the same blanket for multiple runs would violate this assumption as the experiments done with the same blanket would be correlated with each other.
+
+Fisher \cite{Fisher1992} first wrote about that problem and gave a solution with \textbf{split-plot designs}. A split-plot design allows restricted randomization. For the current example this means that it is no longer necessary to exchange the blanket for each experiment. Instead the same blanket can be used inside of each \textbf{whole plot}. 
+
+\begin{table}[!h]
+\centering
+\begin{tabular}{lllll}
+  \hline
+ WholePlot & BlanketType& CylinderGap & Speed \\ 
+  \hline
+  1 & 1 &high & low \\ 
+  1 & 1 & low & low \\ 
+  2 & 2 & high & high \\ 
+  2 & 2 & high & low \\ 
+  3 & 2 & low & low \\ 
+  3 & 2 & low & low \\ 
+  4 & 2 & high & low \\ 
+  4 & 2 & low & high \\ 
+   \hline
+\end{tabular}
+	\caption{Printing Press Example as Split Plot Design}
+\end{table}
+
+In this example the factor \textbf{blanket type} would be called a \textbf{hard-to-change}-factor (HTC). It is inconvenient to reset this factor for each experiment and thus a restriction to the randomiztion of the experiment is imposed. The restriction limits the number of resets of the hard-to-change factor to a practical amount. 
+
+In contrast to the hard-to-change-factor, all other factors - that can be reset for each experiment without a lot of effort - are called \textbf{easy-to-change}-factors (ETC). A split-plot design is still randomized inside of the whole plots so that the easy-to-change-factors are changing as much as possible. 
+
+There are many forms of split-plot designs and many examples of different types of hard-to-change factors. Jones et al. \cite{jones:whyandhow}, \cite{jones:book} and Kowalski \cite{kowalski:recsplitplot} give a good overview of this topic.
+
+\subsection{Design Model}
+
+The \textbf{design model} of a split-plot design is different to the traditional design models of completely randomized designs (CRD). For the analysis of CRDs an ordinary least squares regression is applicable:
+
+$$Y = X \beta + \epsilon$$
+
+where:
+
+\begin{itemize}
+	\item $Y$ is a $n \times 1$-vector containing the measured responses. Here $n$ represents the number of runs in the design.
+	\item $\beta$ is a $p\times 1$-vector containing the model parameters. Here $p$ is the number of parameters in the model including the intercept.
+	\item $X$ is the $n \times p$-model matrix, where each column represents one model effect and each of the $n$ rows represent one run of the design.
+	\item $\epsilon$ is a $n \times 1$-vector representing the residuals of the model. The residuals are assumed to be identically, independently and normally distributed with mean 0 and standard deviation $\sigma$.
+\end{itemize}
+
+As mentioned before there is a problem with the assumption of independence of residuals when using a split-plot design. The design is set up so that some factor settings are not changed for a group of experiments. Thus all experiments in one whole plot are correlated with each other. This correlation arrises because the experimentator is missing the variability that is introduced to the process by changing the hard-to-change-factor. To account for the correlation structure in the analysis, split-plot designs are usually analyzed by using mixed models of the following structure:
+
+$$ Y = X\beta + Z\gamma + \epsilon$$
+
+Here $Y$, $X$ and $\beta$ are the same like before.
+
+\begin{itemize}
+	\item$Z$ is a $n \times b$-matrix representing the whole plot structure of the design. $b$ is the number of hard-to-change-factors.
+	\item $\gamma$ is a $b \times 1$ vector containing the random effects of the whole plots. Their estimators represent the variability between different whole plots. Is is assumed that $\gamma  \sim N(0, \sigma_w^2 )$.
+\end{itemize}
+
+The variance-covariance matrix of the response vector Y can be written as (Jones \cite{jones:whyandhow}):
+
+$$V = \sigma^2 I_n + \sigma^2_w ZZ'$$
+
+
+$V$ is a block diagonal matrix, where each block represents one whole plot. $\sigma^2$ is the residual variance, while $\sigma^2_w$ represents the variance between whole plots. A more in depth description of the analysis of split-plot designs is given at Jones \cite{jones:whyandhow} and N\ae s \cite{analysisofsplitplots}.
+
+\subsection{Design Setup}
+
+The design of an experiment goes hand in hand with the design model. Thus the modification of the design model has some implication for the setup of a split-plot design. While some programs still provide split-plot-variants for classical full- and fractional-factorial designs (Jones \cite{jones:whyandhow}), optimal designs have proven their value with a much higher flexibility (Jones \& Goos \cite{jones:optimalalg}, \cite{jones:book}). When planning optimal split-plot designs there are two major factors to be considered: 
+
+\begin{enumerate}
+	\item How many whole-plots should be chosen?
+	\item How to calculate the chosen optimality criterion considering the different type of analysis that is done for split-plot designs?
+\end{enumerate}
+
+The number of whole plots defines how often the experimentor needs to reset the condition of the corresponding hard-to-change-factor. Thus this decision is often made with an economical background. At the same time the number of whole plots is very relevant for the estimation of the random-effects part of the model and for the power of the hard-to-change-factor effects (see JMP Help \cite{JMPHELP:numberwholepots}). The minimal number of whole plots is $l+1$ where $l$ is the number of levels of the hard-to-change-factor. Using only $l$ whole plots would make it impossible to differentiate between the effect of the hard-to-change-factor and the whole plot-effect (which is the variability that comes from resetting the condition of the hard-to-change factor).
+
+The second aspect that is relevant when working with optimal split-plot-designs are the necessary adjustments to optimality criteria. As most optimality criteria depend on the chosen design model it is necessary to adjust them to the new design model including the random effects. Jones and Goos \cite{jones:optimalalg}, \cite{jones:ianddoptimal} as well as Hooks et al.  \cite{hooks:optimalityrandomeffects} give an overview of how to calculate different optimality criteria in the presence of random effects:
+
+\begin{itemize}
+	\item \textbf{D-Optimality:} $D(X) = |X'V^{-1}X|$ with $X$ being the design matrix and $V$ being the variance-covariance matrix of the response as it was defined above. $V$ depends on $Z$ which is the whole-plot-structutre of the design and on the ratio of $\sigma^2$ and $\sigma^2_w$.
+	\item \textbf{I-Optimality:} $I(X) = \text{ average prediction variance } = 2^{-N} tr[(X'V^{-1}X)^{-1}B]$ where $B=\int_{x \in [-1,+1]^N}f(x)f'(x)dx$ is called the moments matrix for the experimental region $\chi = [-1,+1]^N$. $N$ is the number of factors. 
+	\item \textbf{A-Optimality:} $A(X) = trace(X'V^{-1}X)$.
+\end{itemize}

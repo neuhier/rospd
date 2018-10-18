@@ -1,0 +1,99 @@
+\section{An Algorithm to Generate Optimal Semi-Split-Plot Designs} \label{algo}
+
+There is a wide variety of algorithms to produce optimal designs. The Fedorov algorithm (Miller and Nguyen \cite{fedorovalg}) is probably one of the more popular ones. JMP as an example for a commercial DoE software uses an coordinate-exchange algorithm (Meyer and Nachtsheim \cite{coordexchange}). The R-package rospd uses a modified version of Jone's and Goos' \cite{jones:optimalalg} candidate-set-free algorithm to create (D-) optimal semi-split-plot designs. The algorithm and the modifications are described in the following.
+
+\subsection{Prerequisites}
+
+To use the algorithm the following information has to be provided:
+
+\begin{itemize}
+	\item \textbf{Factors:} The algorithm can handle continuous or categorical factors that are easy-, hard- or semi-hard-to-change.
+	\item \textbf{Whole-Plot-Structure:} If there are any hard- or semi-hard-to-change-factors (SHTC) a matrix representing the whole plot structure needs to be defined. This matrix defines the whole plots of the design and therfore when and how often each HTC- or SHTC-factor can be changed.
+	\item \textbf{SHTC-Group-Size:} This integer defines how many different settings of a SHTC-factor can be used in one whole plot.
+	\item \textbf{Number of runs:} The number of experiments done for the DoE.
+	\item \textbf{Constraints:} Possible constraints to the factors space can be defined.
+	\item \textbf{Optimality Criterion:} The algorithm works with any optimality criterion that expresses the quality of a design as a number.
+\end{itemize}
+
+\subsection{Initial Random Design}
+
+The algorithm starts by generating a random initial design table. The design table is a data frame containing one combination of factor settings for each run of the design. The initial design uses random factor levels for each cell in the data table. It respects all restrictions like restrictions to the randomization and constraints to the factor space. This includes a possible SHTC-structure as well.
+
+For the given example the initial random design might look like table \ref{initDoE}.
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{lrr|lrr}
+  \hline
+solvent & pH & time & solvent & pH & time \\ 
+ \hline \hline
+A & 12 & 10 & B & 3 & 10 \\ 
+A & 12 & 15 & B & 12 & 10 \\ 
+A & 7.50 & 20 & B & 7.50 & 10 \\ 
+A & 7.50 & 10 & B & 12 & 15 \\ 
+A & 7.50 & 10 & B & 12 & 10 \\ 
+D & 3 & 15 & C & 3 & 20 \\ 
+D & 3 & 20 & C & 12 & 20 \\ 
+D & 12 & 15 & C & 7.50 & 15 \\ 
+D & 7.50 & 20 & C & 12 & 15 \\ 
+D & 12 & 15 & C & 7.50 & 15 \\ 
+   \hline
+\end{tabular}
+\caption{Initial Random Design}
+\label{initDoE}
+\end{table}
+
+\subsection{Updating the design}
+
+The algorithm starts with a random initial design and updates cells of that design table sequentially to improve the optimality of the design. Therefore an iteration matrix (table \ref{iterationmatrix}) is generated. The iteration matrix specifies in which order the elements of the design are updated.
+
+\begin{table}[!h]
+\centering
+\begin{tabular}{rrr|rrr}
+  \hline
+solvent & pH & time & solvent & pH & time \\ 
+  \hline
+  \hline
+1 & 2 & 7 & 23 & 24 & 29 \\ 
+1 & 3 & 8 & 23 & 25 & 30 \\ 
+1 & 4 & 9 & 23 & 26 & 31 \\ 
+1 & 5 & 10 & 23 & 27 & 32 \\ 
+1 & 6 & 11 & 23 & 28 & 33 \\ 
+12 & 13 & 18 & 34 & 35 & 40 \\ 
+12 & 14 & 19 & 34 & 36 & 41 \\ 
+12 & 15 & 20 & 34 & 37 & 42 \\ 
+12 & 16 & 21 & 34 & 38 & 43 \\ 
+12 & 17 & 22 & 34 & 39 & 44 \\ 
+   \hline
+\end{tabular}
+\caption{Iteration Matrix}
+\label{iterationmatrix}
+\end{table}
+
+
+Each index number in the iteration matrix represents one update step. In the first step all cells of the design table are updated for which the iteration matrix equals 1. In the current example this is the first whole plot of the factor solvent. The second step updates the first row of the factor pH, the second step updates the second row of the factor pH and so on.
+
+The iteration matrix is structured in a way to first update all cells in the first whole plot. The first whole plot is defined by the factor that is hardest to change - that is the factor with the smallest number of changes. Inside of each whole plot the algorithm updates each cell beginning with HTC- and SHTC-factors ordered by the number of changes from few changes to many changes. ETC-factors are updated last.
+
+The updating works differently depending on the type of the factor:
+
+\begin{itemize}
+	\item \textbf{ETC-Factors} are updated one cell at a time. Each possible level for that factor is considered. For continuous factors the user has to specify how many intervals between minimum and maximum factor level will be considered. If replacing the current value in the design table with any of the other possible values improves the optimality of the design, the best value is used. 
+	\item \textbf{HTC-Factors:} are updated in groups. Each possible value is considered. Instead of updating just one cell, all cells of the current whole plot in the design table are replaced simultaneously with the same value. The value that grants the best optimality for the design is used.
+\item \textbf{SHTC-Factors} are updated in groups defined by the whole plots. Other than for HTC-factors the values for each cell in one whole plot can be different. All possible combinations are tested and the best one in terms of the chosen optimality is used.
+\end{itemize}
+
+Updating a SHTC-factor is laborious. Looking at the first whole plot of the current example there are many possible factor settings. The restriction of the design is to not use more than four of the six possible solvents in one whole plot. There are $\frac{m!}{(m-k)!} = \frac{6!}{(6-4)!} = 15$ possible combinations to pick four solvents out of the six. 
+
+Here the parameters $m$ and $k$ are:
+
+\begin{itemize}
+	\item $m$: the overall number of levels of the SHTC-factor
+	\item $k$: the number of different levels that can be used in one whole plot.
+\end{itemize}
+
+For each of the 15 sets of solvents there are $m^{n_w} = 4^5 = 1024$ possible combinations with $n_w$ being the size of the whole plot. Thus it requires calculating the optimality of $15*1024=15360$ designs to determine the best settings for the SHTC-factor \textbf{solvent} just for the first whole plot.
+
+A faster but less comprehensive way of updating SHTC-factors was implemented as well. Here all elements of the SHTC-factor in one whole plot are updated sequentially. This is the same approach that is used for ETC-factors with the exception that not all possible factor levels are used but rather a subset defined by the number of possible settings inside of one whole plot. The sequential updating is done for all possible subsets of factor levels out of all factor levels of the SHTC-factor.
+
+By default the algorithm will use one random start and update each element of the design table up to 25 times. At the end of each step the algorithm checks if any cell of the desing was updated. If no changes where made the algorithm converged and stops.
