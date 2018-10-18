@@ -1,0 +1,44 @@
+Package: rospd
+Type: Package
+Title: Optimal Split Plot Designs
+Version: 0.1.0
+Author: Sebastian Hoffmeister
+Maintainer: Sebastian Hoffmeister <sebastian.hoffmeister@roche.com>
+Description: This package allows the generation of optimal designs.    
+             This includes split plot designs and the use of "semi-hard-to-change"-factors.
+License: ???
+Encoding: UTF-8
+LinkingTo: Rcpp, RcppEigen
+Imports:
+  Rcpp, 
+  RcppEigen,
+  vdg,
+  ggplot2,
+  reshape
+Depends:
+  Rcpp, 
+  RcppEigen,
+  vdg,
+  ggplot2,
+  reshape
+Collate:
+  doeFactor.R
+  doeDesign.R
+  PrintDoeDesign.R
+  AOptimality.R
+  DOptimality.R
+  IOptimality.R
+  GOptimality.R
+  EvaluateDesign.R
+  GenerateDesignMatrix.R
+  GenerateIterationMatrix.R
+  GenerateOptimalDesign.R
+  GenerateRandomDesign.R
+  SetElement.R
+  SaveDOEtoJMP.R
+  RcppExports.R
+LazyData: true
+RoxygenNote: 6.0.1
+Suggests: knitr,
+    rmarkdown
+VignetteBuilder: knitr
